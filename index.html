@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静心烧香</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f5f0e6;
+            font-family: "Ma Shan Zheng", "STKaiti", serif;
+            color: #5d4037;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f5f0e6"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23e0d5c5" stroke-width="0.5"/></svg>');
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            letter-spacing: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .incense-container {
+            position: relative;
+            height: 60%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .incense-holder {
+            width: 80px;
+            height: 30px;
+            background-color: #8d6e63;
+            border-radius: 5px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .incense-holder::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background-color: #8d6e63;
+            border-radius: 50%;
+        }
+        
+        .incense-stick {
+            position: absolute;
+            bottom: 30px;
+            width: 8px;
+            height: 350px;
+            background: linear-gradient(to bottom, #a1887f, #8d6e63);
+            border-radius: 4px;
+            transform-origin: bottom center;
+            z-index: 1;
+        }
+        
+        .incense-ash {
+            position: absolute;
+            bottom: 30px;
+            width: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            transform-origin: bottom center;
+            z-index: 3;
+            opacity: 0.9;
+        }
+        
+        .smoke {
+            position: absolute;
+            bottom: 380px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 0;
+            filter: blur(4px);
+            opacity: 0;
+            z-index: 4;
+        }
+        
+        .ember {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff9800, #ff5722);
+            box-shadow: 0 0 10px 5px rgba(255, 87, 34, 0.3);
+            z-index: 5;
+            opacity: 0;
+        }
+        
+        .timer {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            letter-spacing: 2px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        button {
+            background-color: #8d6e63;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #6d4c41;
+        }
+        
+        button:disabled {
+            background-color: #d7ccc8;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .quote {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            opacity: 0.7;
+            padding: 0 20px;
+        }
+        
+        @keyframes smoke-rise {
+            0% {
+                height: 0;
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            50% {
+                height: 150px;
+                opacity: 0.5;
+            }
+            100% {
+                height: 300px;
+                opacity: 0;
+                transform: translateX(-50%) translateY(-200px) scale(3);
+            }
+        }
+        
+        @keyframes ember-glow {
+            0%, 100% {
+                opacity: 0.7;
+                box-shadow: 0 0 10px 5px rgba(255, 87, 34, 0.3);
+            }
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 15px 8px rgba(255, 87, 34, 0.5);
+            }
+        }
+        
+        .lotus {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0.2;
+        }
+        
+        .lotus-1 {
+            top: 10%;
+            left: 10%;
+            transform: rotate(20deg);
+        }
+        
+        .lotus-2 {
+            top: 70%;
+            right: 10%;
+            transform: rotate(-15deg);
+        }
+        
+        .completion-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #f5f0e6;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+        
+        .completion-message.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .completion-message h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .completion-message p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .completion-message button {
+            background-color: #a1887f;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <svg class="lotus lotus-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50,20 C60,5 80,10 85,25 C90,40 70,50 50,45 C30,50 10,40 15,25 C20,10 40,5 50,20 Z" fill="#8d6e63"/>
+    </svg>
+    
+    <svg class="lotus lotus-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50,20 C60,5 80,10 85,25 C90,40 70,50 50,45 C30,50 10,40 15,25 C20,10 40,5 50,20 Z" fill="#8d6e63"/>
+    </svg>
+    
+    <div class="container">
+        <h1 class="title">静心烧香</h1>
+        <p class="subtitle">一炷香，一小时，静心冥想<br>观香燃尽，悟禅之道</p>
+        
+        <div class="incense-container">
+            <div class="smoke"></div>
+            <div class="ember"></div>
+            <div class="incense-ash"></div>
+            <div class="incense-stick"></div>
+            <div class="incense-holder"></div>
+        </div>
+        
+        <div class="timer">00:00:00</div>
+        
+        <div class="controls">
+            <button id="start-btn">点燃香火</button>
+            <button id="reset-btn" disabled>重新上香</button>
+        </div>
+        
+        <div class="stats">
+            已完成: <span id="completed-count">0</span> 炷香
+        </div>
+    </div>
+    
+    <div class="quote">
+        "心若无尘，香烟自净。"
+    </div>
+    
+    <div class="completion-message" id="completion-message">
+        <h2>功德圆满</h2>
+        <p>您已静心观香一小时，<br>完成了第 <span id="completed-number">1</span> 炷香。</p>
+        <p>心如止水，返璞归真。</p>
+        <button id="continue-btn">继续上香</button>
+    </div>
+    
+    <script>
+        // 元素
+        const incenseStick = document.querySelector('.incense-stick');
+        const incenseAsh = document.querySelector('.incense-ash');
+        const smoke = document.querySelector('.smoke');
+        const ember = document.querySelector('.ember');
+        const timer = document.querySelector('.timer');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const completedCount = document.getElementById('completed-count');
+        const completionMessage = document.getElementById('completion-message');
+        const completedNumber = document.getElementById('completed-number');
+        const continueBtn = document.getElementById('continue-btn');
+        
+        // 变量
+        let isIncenseBurning = false;
+        let startTime;
+        let timerInterval;
+        let smokeInterval;
+        let burnProgress = 0;
+        let completedIncense = 0;
+        
+        // 从本地存储加载完成的香数量
+        if (localStorage.getItem('completedIncense')) {
+            completedIncense = parseInt(localStorage.getItem('completedIncense'));
+            completedCount.textContent = completedIncense;
+        }
+        
+        // 初始化香的高度
+        const incenseHeight = 350; // 香的总高度
+        incenseStick.style.height = `${incenseHeight}px`;
+        
+        // 开始燃烧
+        function startBurning() {
+            if (isIncenseBurning) return;
+            
+            isIncenseBurning = true;
+            startTime = Date.now();
+            burnProgress = 0;
+            
+            // 重置香的状态
+            incenseAsh.style.height = '0px';
+            incenseStick.style.height = `${incenseHeight}px`;
+            
+            // 更新按钮状态
+            startBtn.disabled = true;
+            resetBtn.disabled = false;
+            
+            // 开始计时器
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // 开始燃烧动画
+            requestAnimationFrame(updateBurning);
+            
+            // 创建烟雾效果
+            createSmoke();
+            
+            // 创建火星效果
+            createEmber();
+        }
+        
+        // 更新燃烧进度
+        function updateBurning() {
+            if (!isIncenseBurning) return;
+            
+            // 计算燃烧进度 (1小时 = 3600秒)
+            const elapsedTime = (Date.now() - startTime) / 1000;
+            burnProgress = Math.min(elapsedTime / 3600, 1);
+            
+            // 更新香的高度
+            const remainingHeight = incenseHeight * (1 - burnProgress);
+            incenseStick.style.height = `${remainingHeight}px`;
+            
+            // 更新灰烬高度
+            const ashHeight = incenseHeight * burnProgress;
+            incenseAsh.style.height = `${ashHeight}px`;
+            
+            // 更新火星位置
+            const emberPosition = incenseHeight - ashHeight;
+            ember.style.bottom = `${30 + emberPosition}px`;
+            
+            // 更新烟雾位置
+            smoke.style.bottom = `${30 + emberPosition + 10}px`;
+            
+            // 检查是否燃烧完成
+            if (burnProgress >= 1) {
+                completeIncense();
+            } else {
+                requestAnimationFrame(updateBurning);
+            }
+        }
+        
+        // 创建烟雾效果
+        function createSmoke() {
+            if (!isIncenseBurning) return;
+            
+            // 创建新的烟雾元素
+            const newSmoke = document.createElement('div');
+            newSmoke.classList.add('smoke');
+            
+            // 设置烟雾样式
+            newSmoke.style.position = 'absolute';
+            newSmoke.style.width = '8px';
+            newSmoke.style.background = 'linear-gradient(to top, rgba(200, 200, 200, 0.8), rgba(200, 200, 200, 0))';
+            newSmoke.style.filter = 'blur(4px)';
+            newSmoke.style.zIndex = '4';
+            
+            // 设置烟雾位置
+            const emberPosition = incenseHeight * (1 - burnProgress);
+            newSmoke.style.bottom = `${30 + emberPosition + 10}px`;
+            newSmoke.style.left = '50%';
+            newSmoke.style.transform = 'translateX(-50%)';
+            
+            // 添加到容器
+            document.querySelector('.incense-container').appendChild(newSmoke);
+            
+            // 添加动画
+            newSmoke.style.animation = 'smoke-rise 4s ease-out forwards';
+            
+            // 动画结束后移除元素
+            setTimeout(() => {
+                if (newSmoke.parentNode) {
+                    newSmoke.parentNode.removeChild(newSmoke);
+                }
+            }, 4000);
+            
+            // 继续创建烟雾
+            if (isIncenseBurning) {
+                setTimeout(createSmoke, 300);
+            }
+        }
+        
+        // 创建火星效果
+        function createEmber() {
+            if (!isIncenseBurning) return;
+            
+            // 设置火星位置
+            const emberPosition = incenseHeight * (1 - burnProgress);
+            ember.style.bottom = `${30 + emberPosition}px`;
+            ember.style.left = '50%';
+            ember.style.transform = 'translateX(-50%)';
+            
+            // 显示火星
+            ember.style.opacity = '1';
+            ember.style.animation = 'ember-glow 2s infinite';
+        }
+        
+        // 更新计时器
+        function updateTimer() {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(elapsedTime / 3600).toString().padStart(2, '0');
+            const minutes = Math.floor((elapsedTime % 3600) / 60).toString().padStart(2, '0');
+            const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+            
+            timer.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        // 完成一炷香
+        function completeIncense() {
+            isIncenseBurning = false;
+            clearInterval(timerInterval);
+            
+            // 隐藏火星
+            ember.style.opacity = '0';
+            ember.style.animation = 'none';
+            
+            // 更新完成数量
+            completedIncense++;
+            completedCount.textContent = completedIncense;
+            completedNumber.textContent = completedIncense;
+            
+            // 保存到本地存储
+            localStorage.setItem('completedIncense', completedIncense);
+            
+            // 显示完成消息
+            completionMessage.classList.add('show');
+            
+            // 重置按钮状态
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+        }
+        
+        // 重置香
+        function resetIncense() {
+            isIncenseBurning = false;
+            clearInterval(timerInterval);
+            
+            // 重置香的状态
+            incenseAsh.style.height = '0px';
+            incenseStick.style.height = `${incenseHeight}px`;
+            
+            // 隐藏火星
+            ember.style.opacity = '0';
+            ember.style.animation = 'none';
+            
+            // 重置计时器
+            timer.textContent = '00:00:00';
+            
+            // 更新按钮状态
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+        }
+        
+        // 事件监听
+        startBtn.addEventListener('click', startBurning);
+        resetBtn.addEventListener('click', resetIncense);
+        continueBtn.addEventListener('click', () => {
+            completionMessage.classList.remove('show');
+            resetIncense();
+        });
+        
+        // 随机禅语
+        const quotes = [
+            "心若无尘，香烟自净。",
+            "一炷心香，万般静寂。",
+            "香消烟散，心归何处？",
+            "观香燃尽，悟生命无常。",
+            "一念放下，万般自在。",
+            "香烟袅袅，心境如如。",
+            "心静则香静，心动则香动。",
+            "香灭而心不灭，心灭而道不灭。"
+        ];
+        
+        // 随机更换禅语
+        function changeQuote() {
+            const quoteElement = document.querySelector('.quote');
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteElement.textContent = `"${randomQuote}"`;
+            
+            // 每5分钟更换一次
+            setTimeout(changeQuote, 5 * 60 * 1000);
+        }
+        
+        // 初始化
+        changeQuote();
+    </script>
+</body>
+</html>
